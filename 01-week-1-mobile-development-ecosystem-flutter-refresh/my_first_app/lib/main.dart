@@ -14,15 +14,15 @@ class MyApp extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.school, size: 72),
+              Icon(Icons.audiotrack, size: 72),
               SizedBox(height: 16),
-              Text('Khoirul Umam Novalidi', style: TextStyle(fontSize: 24)),
-              Text('244107020210', style: TextStyle(fontSize: 20)),
+              Text('Justin Bieber', style: TextStyle(fontSize: 24)),
+              Text('Sorry', style: TextStyle(fontSize: 20)),
               Text(
                 'Teknik Informatika | Politeknik Negeri Malang',
                 style: TextStyle(fontSize: 18),
               ),
-              Text('Pemrograman Mobile — Minggu 1'),
+              Text('Pemrograman Mobile | Flutter'),
             ],
           ),
         ),

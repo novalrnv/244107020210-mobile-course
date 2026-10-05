@@ -78,7 +78,10 @@ class _NovalidiState extends State<Novalidi> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Align(alignment: Alignment.centerLeft, child: Text(lagu.lirik1)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(lagu.lirik1)
+                ),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text('\n${lagu.lirik2}'),

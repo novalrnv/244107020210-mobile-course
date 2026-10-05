@@ -1,10 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 
 List<CameraDescription> cameras = [];
 
@@ -245,9 +242,7 @@ class DisplayPictureScreen extends StatelessWidget {
   }
 }
 
-Future<List<Placemark>> _getPlacemark(double lat, double lng) {
-  return Geocoding().placemarkFromCoordinates(lat, lng);
-}
+
 
 class GpsScreen extends StatefulWidget {
   const GpsScreen({super.key});
@@ -257,9 +252,10 @@ class GpsScreen extends StatefulWidget {
 }
 
 class _GpsScreenState extends State<GpsScreen> {
-  LatLng? _lokasi;
-  String _alamat = 'Mencari alamat...';
-  final MapController _mapController = MapController();
+  double? _latitude;
+  double? _longitude;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -268,109 +264,196 @@ class _GpsScreenState extends State<GpsScreen> {
   }
 
   Future<void> _ambilLokasi() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     LocationPermission izin = await Geolocator.requestPermission();
 
     if (izin == LocationPermission.denied ||
         izin == LocationPermission.deniedForever) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Izin lokasi ditolak. Mohon aktifkan di pengaturan.';
+      });
       return;
     }
 
-    Position posisi = await Geolocator.getCurrentPosition();
+    try {
+      Position posisi = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
 
-    List<Placemark> placemark = await _getPlacemark(
-      posisi.latitude,
-      posisi.longitude,
+      setState(() {
+        _latitude = posisi.latitude;
+        _longitude = posisi.longitude;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal mengambil lokasi: $e';
+      });
+    }
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, Color iconColor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: iconColor, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
-
-    setState(() {
-      _lokasi = LatLng(posisi.latitude, posisi.longitude);
-      _alamat =
-          '${placemark[0].street}, ${placemark[0].subLocality}, ${placemark[0].locality}, ${placemark[0].country}';
-    });
-
-    _mapController.move(_lokasi!, 16);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_lokasi == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('GPS Lokasi')),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Mengambil lokasi...'),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('GPS Lokasi')),
-      body: Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _lokasi!,
-              initialZoom: 16,
+      appBar: AppBar(
+        title: const Text('GPS Lokasi'),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header icon
+            const SizedBox(height: 12),
+            const Icon(
+              Icons.location_on,
+              size: 72,
+              color: Colors.blue,
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.project_week4',
+            const SizedBox(height: 8),
+            const Text(
+              'Lokasi Saya',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _lokasi!,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 48,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
 
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.red),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _alamat,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
+            // Loading state
+            if (_isLoading)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 12),
+                      Text('Mengambil lokasi GPS...'),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ],
+
+            // Error state
+            if (_errorMessage != null)
+              Card(
+                color: Colors.red.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Koordinat Card
+            if (_latitude != null) ...[
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'KOORDINAT',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildInfoRow(
+                        Icons.arrow_upward,
+                        'Latitude',
+                        _latitude!.toStringAsFixed(6),
+                        Colors.green,
+                      ),
+                      const SizedBox(height: 14),
+                      _buildInfoRow(
+                        Icons.arrow_forward,
+                        'Longitude',
+                        _longitude!.toStringAsFixed(6),
+                        Colors.orange,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 80),
+            ],
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _mapController.move(_lokasi!, 16),
-        child: const Icon(Icons.my_location),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isLoading ? null : _ambilLokasi,
+        icon: const Icon(Icons.refresh),
+        label: const Text('Perbarui Lokasi'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
+
