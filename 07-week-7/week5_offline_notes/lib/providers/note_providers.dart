@@ -15,7 +15,11 @@ final notesProvider = FutureProvider<List<Note>>(
 final dirtyCountProvider = FutureProvider<int>(
   (ref) => ref.watch(noteRepositoryProvider).countDirty(),
 );
- 
+
+final noteByIdProvider = FutureProvider.family<Note?, int>(
+  (ref, id) => ref.watch(noteRepositoryProvider).getNoteById(id),
+);
+
 final noteActionsProvider = Provider<NoteActions>((ref) => NoteActions(ref));
  
 /// Kumpulan aksi yang mengubah data. Setiap mutasi diakhiri invalidate
@@ -45,6 +49,7 @@ class NoteActions {
   void _refresh() {
     _ref.invalidate(notesProvider);
     _ref.invalidate(dirtyCountProvider);
+    _ref.invalidate(noteByIdProvider);
   }
 
   Future<int> sync() async {

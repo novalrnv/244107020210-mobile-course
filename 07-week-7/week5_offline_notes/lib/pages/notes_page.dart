@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
- 
+import 'package:go_router/go_router.dart';
+
 import '../data/local/note.dart';
 import '../providers/note_providers.dart';
 import '../widgets/note_form_dialog.dart';
 import '../widgets/note_tile.dart';
 import '../data/sync.dart';
-import 'posts_page.dart';
 
-import 'settings_page.dart';
- 
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
- 
+
   Future<void> _openForm(
     BuildContext context,
     WidgetRef ref, [
@@ -32,12 +30,12 @@ class NotesPage extends ConsumerWidget {
       );
     }
   }
- 
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notesAsync = ref.watch(notesProvider);
     final dirty = ref.watch(dirtyCountProvider).value ?? 0;
- 
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Offline Notes'),
@@ -53,9 +51,7 @@ class NotesPage extends ConsumerWidget {
           IconButton(
             tooltip: 'Posts (cache-first)',
             icon: const Icon(Icons.article_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PostsPage()),
-            ),
+            onPressed: () => context.push('/posts'),
           ),
           IconButton(
             tooltip: 'Sinkronkan',
@@ -77,9 +73,7 @@ class NotesPage extends ConsumerWidget {
           IconButton(
             tooltip: 'Pengaturan',
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsPage()),
-            ),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
@@ -98,7 +92,7 @@ class NotesPage extends ConsumerWidget {
               final note = notes[index];
               return NoteTile(
                 note: note,
-                onTap: () => _openForm(context, ref, note),
+                onTap: () => context.push('/note/${note.id}'),
                 onDelete: () =>
                     ref.read(noteActionsProvider).delete(note.id!),
               );
