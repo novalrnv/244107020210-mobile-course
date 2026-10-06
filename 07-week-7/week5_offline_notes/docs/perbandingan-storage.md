@@ -11,12 +11,12 @@ Dokumen ini memuat perbandingan teknis antara **SharedPreferences**, **Hive / Hi
 | Kriteria | **SharedPreferences** | **Hive / Hive CE** | **sqflite (Raw SQLite)** | **Drift (Reactive SQLite)** |
 | :--- | :--- | :--- | :--- | :--- |
 | **Model Data** | Key-Value primitif (XML / NSUserDefaults / plist) | NoSQL Box (Binary format) | Relasional (RDBMS SQL) | Relasional (RDBMS SQL berorientasi objek) |
-| **Kompleksitas Query** | ❌ Sangat terbatas (hanya `get(key)`) | ⚠️ Dasar (filter linear di memori / index manual) | ✔️ Tinggi (WHERE, LIKE, FTS, agregasi, subquery) | ✔️ Sangat Tinggi (Type-safe query builder, Dart / SQL DSL) |
-| **Kebutuhan Relasi (JOIN)** | ❌ Tidak mendukung relasi | ⚠️ Manual via ID lookup (tidak ada foreign key bawaan) | ✔️ Penuh (Foreign Key, JOIN, ON DELETE CASCADE) | ✔️ Penuh & Terstruktur (Type-safe joins, view, relations) |
-| **Reaktivitas (Stream)** | ❌ Tidak ada bawaan (harus dibungkus state management) | ⚠️ `ValueListenable` / `watch()` per Box/Key | ❌ Manual (perlu trigger/event manual ke Provider/Bloc) | ✔️ Bawaan (`watch()`, `watchSingle()`, auto-update saat mutasi) |
-| **Type-Safety** | ⚠️ Lemah (casting tipe data secara manual) | ⚠️ Parsial (butuh `TypeAdapter` & Type Casting) | ⚠️ Lemah (berbasis `Map<String, dynamic>`, raw string SQL) | ✔️ Sangat Kuat (Compile-time checked, auto-generated Dart classes) |
-| **Ukuran Boilerplate** | ✔️ Sangat Rendah (Langsung pakai `getInstance()`) | ⚠️ Sedang (Registrasi adapter, anotasi `@HiveType`) | ⚠️ Sedang-Tinggi (Raw query, mapping Map ↔ Object manual) | ⚠️ Tinggi di awal (Build runner, skema Dart/SQL generation) |
-| **Kemudahan Testing** | ✔️ Sangat Mudah (`setMockInitialValues`) | ⚠️ Sedang (Butuh mock box / direktori temporary disk) | ⚠️ Butuh FFI (`sqflite_common_ffi`) untuk unit test di VM | ✔️ Sangat Mudah (`NativeDatabase.memory()`, in-memory isolation) |
+| **Kompleksitas Query** | Sangat terbatas (hanya `get(key)`) | Dasar (filter linear di memori / index manual) | Tinggi (WHERE, LIKE, FTS, agregasi, subquery) | Sangat Tinggi (Type-safe query builder, Dart / SQL DSL) |
+| **Kebutuhan Relasi (JOIN)** | Tidak mendukung relasi | Manual via ID lookup (tidak ada foreign key bawaan) | Penuh (Foreign Key, JOIN, ON DELETE CASCADE) | Penuh & Terstruktur (Type-safe joins, view, relations) |
+| **Reaktivitas (Stream)** | Tidak ada bawaan (harus dibungkus state management) | `ValueListenable` / `watch()` per Box/Key | Manual (perlu trigger/event manual ke Provider/Bloc) | Bawaan (`watch()`, `watchSingle()`, auto-update saat mutasi) |
+| **Type-Safety** | Lemah (casting tipe data secara manual) | Parsial (butuh `TypeAdapter` & Type Casting) | Lemah (berbasis `Map<String, dynamic>`, raw string SQL) | Sangat Kuat (Compile-time checked, auto-generated Dart classes) |
+| **Ukuran Boilerplate** | Sangat Rendah (Langsung pakai `getInstance()`) | Sedang (Registrasi adapter, anotasi `@HiveType`) | Sedang-Tinggi (Raw query, mapping Map ↔ Object manual) | Tinggi di awal (Build runner, skema Dart/SQL generation) |
+| **Kemudahan Testing** | Sangat Mudah (`setMockInitialValues`) | Sedang (Butuh mock box / direktori temporary disk) | ⚠️ Butuh FFI (`sqflite_common_ffi`) untuk unit test di VM | Sangat Mudah (`NativeDatabase.memory()`, in-memory isolation) |
 
 ---
 
