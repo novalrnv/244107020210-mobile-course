@@ -3,9 +3,9 @@
 Isi tabel ini **setelah** menguji di perangkat. Jangan diisi dari perkiraan.
 Bukti pendukung (screenshot) masuk ke `screenshots/`.
 
-Perangkat yang dipakai: ______________________
-Versi Android/iOS: ______________________
-Tanggal uji: ______________________
+Perangkat yang dipakai: realme RMX2103 (perangkat fisik)
+Versi Android/iOS: Android 11 (API 30)
+Tanggal uji: 2 November 2026
 
 ## Uji A — Jalur FCM sungguhan
 
@@ -38,7 +38,7 @@ payload` FCM.
 | Hapus data aplikasi / reinstall, buka lagi | `onRegistered` mengirim ID baru; ID di backend berubah | |
 | Login → lihat **Sinkronisasi terakhir** | Tertulis "Token terkirim ke POST /devices" (kiriman ulang atas nama user) | |
 | Matikan internet, tekan **Registrasi FCM** | Pesan ramah, bukan crash | |
-| Tolak izin notifikasi | Status "Belum", banner tidak muncul | |
+| Tolak izin notifikasi | Status "Belum", banner tidak muncul | ⚠️ tidak dapat diuji di Android 11 — lihat catatan di bawah |
 | Login → hapus token di backend → buka pengumuman | 401 → refresh → retry berhasil tanpa login ulang | |
 
 ## Uji D — Topic
@@ -49,6 +49,17 @@ payload` FCM.
 | Kirim ke topik `pengumuman-kampus` | Diterima | |
 | Debug → **Berhenti topik** | Status "Tidak" | |
 | Kirim ke topik lagi | Tidak diterima | |
+
+## Catatan perangkat uji
+
+Perangkat: **realme RMX2103, Android 11 (API 30)**, Google Play Services dan
+Play Store terpasang.
+
+`POST_NOTIFICATIONS` baru menjadi izin runtime sejak **Android 13 (API 33)**.
+Di Android 11 notifikasi otomatis diizinkan saat instalasi, sehingga baris
+**"Tolak izin notifikasi"** pada Uji C tidak dapat diuji di perangkat ini.
+Aplikasi memakai `targetSdk = 36`, jadi di perangkat Android 13+ baris tersebut
+relevan dan perlu diuji terpisah.
 
 ## Cara mengisi kolom Hasil
 

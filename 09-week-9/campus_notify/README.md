@@ -158,6 +158,29 @@ Hasil terakhir: `flutter analyze` bersih, 26 test lulus. Yang diuji:
 | `test/app_test.dart` | guard route menahan di `/login`, login membuka beranda |
 | `test/push_service_test.dart` | `maskToken` memotong ID, `syncDeviceToBackend` aman tanpa Firebase |
 
+## Hasil yang dicapai
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| `flutter analyze` | No issues found |
+| `flutter test` | 26 test lulus |
+| `flutter build apk --debug` | Sukses (`app-debug.apk`) |
+| Pemasangan di perangkat | Terpasang dan berjalan di realme RMX2103, Android 11 (API 30) |
+| Firebase Installation ID terkirim ke backend | Belum dapat dibuktikan — butuh `google-services.json` |
+| Tabel uji tiga app state | Belum terisi — lihat [`docs/uji-tiga-state.md`](docs/uji-tiga-state.md) |
+
+Yang sudah terbukti otomatis: logika parsing route, sesi/refresh, pesan error,
+guard route, dan masking token. Yang masih menunggu pengujian perangkat adalah
+perilaku banner dan deep link pada tiga app state.
+
+## Catatan penomoran folder
+
+Codelab menyarankan folder `06-week-6-authentication-security-fcm/`. Proyek ini
+berada di `09-week-9/campus_notify` karena mengikuti penomoran repository ini,
+yang memang bergeser dari codelab — misalnya `07-week-7/` berisi materi week 5
+(`week5_offline_notes`). Struktur di dalam folder (`lib/`, `test/`, `docs/`,
+`README.md`, `screenshots/`) sudah sesuai yang diminta.
+
 ## AI Challenge
 
 Codelab meminta prompt, output awal AI, daftar perbaikan manual, dan tabel uji
@@ -206,3 +229,19 @@ test/              unit + widget test
 - [`docs/ai-challenge/`](docs/ai-challenge/README.md) — prompt, draf awal AI,
   dan daftar perbaikan manual (15 temuan: 5 dari analyzer, 10 dari pembacaan
   ulang).
+- [`docs/refleksi.md`](docs/refleksi.md) — jawaban empat pertanyaan refleksi
+  codelab, dirujuk ke kode dan temuan audit.
+
+## Referensi
+
+- [Codelab Minggu 6 — Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/06-minggu-6-authentication-security-fcm/index.html)
+- [Slide Week 6 — Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/00-slides/Week_06_Authentication_Security_FCM.html)
+- [FCM Flutter client (setup & token)](https://firebase.google.com/docs/cloud-messaging/flutter/client)
+- [FCM message types: notification vs data](https://firebase.google.com/docs/cloud-messaging/concept-options)
+- [Firebase Auth for Flutter](https://firebase.google.com/docs/auth/flutter/start)
+- [flutter_secure_storage](https://pub.dev/packages/flutter_secure_storage)
+- [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+- [GoRouter: redirect & deep linking](https://go_router.dev/)
+- [OWASP Mobile Top 10](https://owasp.org/www-project-mobile-top-10/)
+- [Learn Dart in Y Minutes](https://learnxinyminutes.com/docs/dart/)
+
