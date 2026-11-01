@@ -10,7 +10,7 @@ import '../data/token_store.dart';
 final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => const AuthRepository(),
+  (ref) => AuthRepository(),
 );
 
 final sessionKeeperProvider = Provider<SessionKeeper>(
@@ -53,6 +53,18 @@ class AuthNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
+    final token = await ref.read(tokenStoreProvider).readAccess();
+
+    // Token dicabut di server lebih dulu, selagi masih tersedia. Kegagalan
+    // jaringan tidak boleh menahan pengguna keluar dari aplikasi.
+    if (token != null && token.isNotEmpty) {
+      try {
+        await ref.read(authRepositoryProvider).logout(token);
+      } on Object {
+        // Abaikan: sesi lokal tetap dihapus di bawah.
+      }
+    }
+
     await ref.read(tokenStoreProvider).clear();
     ref.invalidateSelf();
   }

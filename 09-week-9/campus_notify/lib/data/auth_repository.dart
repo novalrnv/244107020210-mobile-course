@@ -1,3 +1,7 @@
+import 'package:dio/dio.dart';
+
+import 'api_client.dart';
+
 class AuthSession {
   const AuthSession({required this.access, required this.refresh});
 
@@ -15,43 +19,84 @@ class AuthException implements Exception {
   String toString() => message;
 }
 
-/// Mock auth provider.
+/// Autentikasi lewat API kampus (Laravel + Sanctum).
 ///
-/// Bentuk API-nya sengaja dibuat sama dengan Firebase Auth: satu titik masuk
-/// yang mengembalikan sesi berisi token. Untuk pindah ke Firebase cukup ganti
-/// isi [login] dengan `FirebaseAuth.instance.signInWithEmailAndPassword` dan
-/// ambil `await user.getIdToken()` sebagai access token. Sisanya (secure
-/// storage, interceptor 401, guard route) tidak perlu berubah.
+/// Memakai Dio sendiri, bukan `dioProvider`, karena klien itu memasang
+/// interceptor yang menempelkan token dan mencoba refresh saat 401. Memakainya
+/// di sini akan membuat login yang gagal memicu refresh, lalu gagal lagi —
+/// lingkaran yang tidak pernah selesai.
 class AuthRepository {
-  const AuthRepository();
+  AuthRepository({Dio? client}) : _client = client ?? _buildClient();
 
+  final Dio _client;
+
+  static Dio _buildClient() {
+    return Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        contentType: Headers.jsonContentType,
+        // Laravel butuh header ini agar menjawab JSON, bukan redirect HTML.
+        headers: <String, dynamic>{'Accept': Headers.jsonContentType},
+      ),
+    );
+  }
+
+  /// Menukar email dan kata sandi dengan token Sanctum.
+  ///
+  /// Sanctum tidak memisahkan access dan refresh token, jadi nilai yang sama
+  /// disimpan di kedua slot. Dengan begitu `SessionKeeper` dan interceptor 401
+  /// yang sudah ada tetap bekerja tanpa perubahan.
   Future<AuthSession> login({
     required String email,
     required String password,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-
-    final normalized = email.trim().toLowerCase();
-    if (!normalized.contains('@') || password.length < 6) {
-      throw const AuthException('Email atau kata sandi tidak valid');
-    }
-
-    // Simulasi JWT. Di produksi token dibuat server, bukan di klien.
-    return AuthSession(
-      access: 'mock-access-for-$normalized',
-      refresh: 'mock-refresh-for-$normalized',
+    final response = await _client.post<Map<String, dynamic>>(
+      '/login',
+      data: <String, dynamic>{
+        'email': email.trim().toLowerCase(),
+        'password': password,
+      },
     );
+
+    final token = _tokenFrom(response.data);
+    return AuthSession(access: token, refresh: token);
   }
 
-  /// Menukar refresh token dengan access token baru.
-  ///
-  /// Di produksi ini panggilan `POST /auth/refresh` dengan refresh token di
-  /// body (bukan query string, agar tidak tercatat di log server/proxy).
+  /// Menukar token lama dengan token baru. Token lama dihapus server.
   Future<String> refresh(String refreshToken) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
     if (refreshToken.isEmpty) {
       throw const AuthException('Refresh token hilang');
     }
-    return 'mock-access-renewed-${DateTime.now().millisecondsSinceEpoch}';
+
+    final response = await _client.post<Map<String, dynamic>>(
+      '/refresh',
+      options: Options(headers: <String, dynamic>{
+        'Authorization': 'Bearer $refreshToken',
+      }),
+    );
+
+    return _tokenFrom(response.data);
+  }
+
+  /// Mencabut token di server. Dipanggil sebelum token lokal dihapus.
+  Future<void> logout(String token) async {
+    await _client.post<Map<String, dynamic>>(
+      '/logout',
+      options: Options(headers: <String, dynamic>{
+        'Authorization': 'Bearer $token',
+      }),
+    );
+  }
+
+  String _tokenFrom(Map<String, dynamic>? body) {
+    final data = body?['data'];
+    final token = data is Map ? data['token'] : null;
+
+    if (token is! String || token.isEmpty) {
+      throw const AuthException('Respons server tidak berisi token.');
+    }
+    return token;
   }
 }

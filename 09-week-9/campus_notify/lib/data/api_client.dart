@@ -6,11 +6,12 @@ import 'token_store.dart';
 class ApiConfig {
   const ApiConfig._();
 
-  /// Ubah lewat `--dart-define=CAMPUS_API_URL=http://10.0.2.2:8000/api`.
-  /// Tidak ada URL rahasia yang di-hardcode di dalam kode.
+  /// Default mengarah ke server lokal lewat `adb reverse tcp:8000 tcp:8000`,
+  /// sehingga HP bisa memakai `127.0.0.1` tanpa bergantung pada Wi-Fi kampus.
+  /// Ganti lewat `--dart-define=CAMPUS_API_URL=http://<host>:8000/api`.
   static const baseUrl = String.fromEnvironment(
     'CAMPUS_API_URL',
-    defaultValue: 'https://example-campus-api.test',
+    defaultValue: 'http://127.0.0.1:8000/api',
   );
 
   static const devicesPath = '/devices';
@@ -27,6 +28,10 @@ Dio buildApiClient({
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       contentType: Headers.jsonContentType,
+      // Wajib: tanpa ini Laravel menjawab 401 dengan redirect ke route
+      // `login` yang tidak ada di aplikasi API-only, sehingga yang sampai ke
+      // pengguna adalah error 500, bukan pesan sesi berakhir.
+      headers: <String, dynamic>{'Accept': Headers.jsonContentType},
     ),
   );
 

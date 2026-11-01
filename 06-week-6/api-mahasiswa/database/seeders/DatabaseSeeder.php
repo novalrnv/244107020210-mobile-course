@@ -11,15 +11,21 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Akun demo untuk presentasi.
+     *
+     * Memakai updateOrCreate supaya seeder aman dijalankan berulang: password
+     * selalu di-reset ke nilai di bawah, tanpa membuat baris duplikat.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::updateOrCreate(
+            ['email' => 'noval@gmail.com'],
+            [
+                'name' => 'Noval',
+                'password' => '231105',
+            ],
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $this->call(MahasiswaSeeder::class);
     }
 }

@@ -34,6 +34,7 @@ class FakeAuthRepository implements AuthRepository {
   bool failLogin;
   bool failRefresh;
   int refreshCalls = 0;
+  int logoutCalls = 0;
 
   @override
   Future<AuthSession> login({
@@ -56,5 +57,10 @@ class FakeAuthRepository implements AuthRepository {
       throw const AuthException('Refresh token ditolak server');
     }
     return 'access-renewed-$refreshCalls';
+  }
+
+  @override
+  Future<void> logout(String token) async {
+    logoutCalls++;
   }
 }

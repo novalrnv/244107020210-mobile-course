@@ -173,8 +173,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Mode codelab: pakai email apa pun dan kata sandi '
-                      'minimal 6 karakter.',
+                      'Masuk memakai akun kampus yang terdaftar di API.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
