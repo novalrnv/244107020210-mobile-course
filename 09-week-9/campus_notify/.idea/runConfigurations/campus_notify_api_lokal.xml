@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="campus_notify (API lokal)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+    <option name="additionalArgs" value="--dart-define=CAMPUS_API_URL=http://10.0.2.2:8000/api" />
+    <method v="2" />
+  </configuration>
+</component>
