@@ -319,16 +319,23 @@ class PushService {
       await _initLocalNotifications();
     }
 
-    const android = AndroidNotificationDetails(
+    // Jumlah notifikasi belum dibaca dipakai sebagai angka badge.
+    final unread = await inbox?.all().then((items) => items.length) ?? 0;
+
+    final android = AndroidNotificationDetails(
       _channelId,
       'Pengumuman Kampus',
       channelDescription: 'Notifikasi pengumuman dan jadwal kampus',
       importance: Importance.high,
       priority: Priority.high,
+      // Badge di icon launcher. Banyak launcher (termasuk ColorOS) hanya
+      // menampilkan titik, bukan angka; itu batasan sistem, bukan aplikasi.
+      channelShowBadge: true,
+      number: unread,
     );
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: android,
-      iOS: DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(),
     );
 
     await _local.show(
@@ -485,6 +492,8 @@ class PushService {
         'Pengumuman Kampus',
         description: 'Notifikasi pengumuman dan jadwal kampus',
         importance: Importance.high,
+        // Menampilkan titik/angka di icon launcher.
+        showBadge: true,
       ),
     );
   }

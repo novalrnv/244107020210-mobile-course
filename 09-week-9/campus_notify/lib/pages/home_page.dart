@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../messaging/push_service.dart';
 import '../providers/app_providers.dart';
 import '../providers/auth_provider.dart';
+import '../providers/inbox_provider.dart';
 import '../routes.dart';
 
 class HomePage extends ConsumerWidget {
@@ -24,6 +25,15 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Campus Notify'),
         actions: [
+          IconButton(
+            tooltip: 'Notifikasi',
+            onPressed: () => context.push(AppRoutes.inbox),
+            icon: Badge.count(
+              count: ref.watch(unreadCountProvider),
+              isLabelVisible: ref.watch(unreadCountProvider) > 0,
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          ),
           IconButton(
             tooltip: 'Debug notifikasi',
             icon: const Icon(Icons.bug_report_outlined),
