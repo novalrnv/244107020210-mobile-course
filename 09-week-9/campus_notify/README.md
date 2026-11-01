@@ -1,11 +1,23 @@
-# Campus Notify — Praktikum 3: Payload, Tiga App State, Klik dan Topik
+# Campus Notify - Praktikum 3 + Empat Tugas Minggu 9
 
 Aplikasi Flutter untuk menerima pengumuman kampus lewat Firebase Cloud
 Messaging. Fokus praktikum ini adalah **payload gabungan `notification + data`**,
 **tiga app state** (foreground, background, terminated), **deep link saat klik**,
 dan **topic messaging**.
 
-> Codelab: [Minggu 6 — Authentication, Security & FCM, Praktikum 3](https://jti-polinema.github.io/flutter-codelab/06-minggu-6-authentication-security-fcm/index.html#4)
+Di atas praktikum itu ditambahkan empat tugas:
+
+| Tugas | Inti | Bukti |
+| --- | --- | --- |
+| 1 | Login lewat API Laravel sungguhan, bukan mock | token Sanctum tersimpan, `POST /devices` mengisi `user_id` |
+| 2 | Notifikasi masuk daftar, hilang saat dibaca | `/notifikasi`, `InboxRepository` |
+| 3 | Notifikasi muncul di icon | `Badge.count` di lonceng, `showBadge` di channel |
+| 4 | Suara notifikasi kustom | `res/raw/notif.wav`, channel `pengumuman_v2` |
+
+Penjelasan lengkap tiap tugas, konsep yang dipakai, dan jebakannya ada di
+[`docs/panduan-belajar.md`](docs/panduan-belajar.md).
+
+> Codelab: [Minggu 6 - Authentication, Security & FCM, Praktikum 3](https://jti-polinema.github.io/flutter-codelab/06-minggu-6-authentication-security-fcm/index.html#4)
 
 ## Tujuan
 
@@ -22,6 +34,10 @@ dan **topic messaging**.
 
 | Fitur | Lokasi |
 | --- | --- |
+| Login lewat API Laravel (Sanctum) | `lib/data/auth_repository.dart` |
+| Kotak masuk notifikasi | `lib/notifications/`, `lib/pages/inbox_page.dart` |
+| Badge jumlah belum dibaca | `lib/pages/home_page.dart`, `lib/providers/inbox_provider.dart` |
+| Suara notifikasi kustom | `lib/messaging/push_service.dart`, `android/app/src/main/res/raw/notif.wav` |
 | Background handler top-level | `lib/messaging/push_service.dart` |
 | Foreground: banner lokal manual | `lib/messaging/push_service.dart` |
 | Background diklik: `onMessageOpenedApp` | `lib/messaging/push_service.dart` |
@@ -47,7 +63,18 @@ flutter pub get
 flutter run
 ```
 
-Login memakai email apa pun dan kata sandi minimal 6 karakter (mock auth).
+Login memakai akun yang terdaftar di API: `noval@gmail.com` / `231105`.
+Tidak ada mock auth lagi; kata sandi diperiksa server Laravel.
+
+### Satu perintah untuk demo
+
+```bat
+tool\demo.bat
+```
+
+Menyalakan MySQL, menjalankan Laravel di `127.0.0.1:8000`, dan memasang
+`adb reverse tcp:8000 tcp:8000`. `adb reverse` wajib saat memakai kabel USB:
+tanpa itu `127.0.0.1` di dalam HP menunjuk ke HP itu sendiri, bukan ke laptop.
 
 ### Android Studio
 
@@ -147,11 +174,16 @@ flutter analyze
 flutter test
 ```
 
-Hasil terakhir: `flutter analyze` bersih, 26 test lulus. Yang diuji:
+Hasil terakhir: `flutter analyze` bersih, 55 test lulus. Yang diuji:
 
 | File | Cakupan |
 | --- | --- |
-| `test/notification_route_test.dart` | parsing payload → route (kosong, tanpa slash, tipe salah) |
+| `test/notification_route_test.dart` | parsing payload → route (kosong, tanpa slash, tipe salah) + `NotificationPayload` |
+| `test/inbox_repository_test.dart` | tambah, hapus, urut terbaru, ID ganda, data rusak |
+| `test/message_mapper_test.dart` | pesan → item, ID cadangan deterministik |
+| `test/inbox_notifier_test.dart` | `markRead`, `clearAll`, `unreadCountProvider` |
+| `test/inbox_format_test.dart` | "Baru saja", "3 jam lalu", tanggal lampau |
+| `test/notification_config_test.dart` | channel + suara di manifest sama dengan konstanta `PushService`, `notif.wav` ada |
 | `test/session_keeper_test.dart` | refresh sekali, gagal → sesi dibersihkan |
 | `test/api_errors_test.dart` | 401/timeout/offline/5xx → pesan ramah |
 | `test/auth_notifier_test.dart` | login menyimpan token, logout menghapus |
@@ -163,21 +195,26 @@ Hasil terakhir: `flutter analyze` bersih, 26 test lulus. Yang diuji:
 | Pemeriksaan | Hasil |
 | --- | --- |
 | `flutter analyze` | No issues found |
-| `flutter test` | 26 test lulus |
+| `flutter test` | 55 test lulus |
 | `flutter build apk --debug` | Sukses (`app-debug.apk`) |
 | Pemasangan di perangkat | Terpasang dan berjalan di realme RMX2103, Android 11 (API 30) |
-| Firebase Installation ID terkirim ke backend | Belum dapat dibuktikan — butuh `google-services.json` |
-| Tabel uji tiga app state | Belum terisi — lihat [`docs/uji-tiga-state.md`](docs/uji-tiga-state.md) |
+| Login lewat API | Terbukti: token Sanctum dibuat, `POST /api/devices` mengisi `user_id = 1` |
+| Kotak masuk | Terbukti: item masuk daftar, badge lonceng `1`, item hilang setelah diketuk |
+| Deep link dari banner (background) | Terbukti: kembali ke `/pengumuman/3` |
+| Deep link dari banner (terminated) | Terbukti: cold start langsung di `/pengumuman/3` |
+| Suara kustom | Terbukti: `mSound=android.resource://id.polinema.campus_notify/raw/notif` |
+| Angka badge di icon launcher | Launcher ColorOS hanya menampilkan titik; pengaturan `mShowBadge=true` sudah benar |
+| Tabel uji tiga app state | Terisi sebagian, lihat [`docs/uji-tiga-state.md`](docs/uji-tiga-state.md) |
 
-Yang sudah terbukti otomatis: logika parsing route, sesi/refresh, pesan error,
-guard route, dan masking token. Yang masih menunggu pengujian perangkat adalah
-perilaku banner dan deep link pada tiga app state.
+Yang masih menunggu pengujian: pengiriman sungguhan dari Firebase Console
+(Uji A), tombol berhenti/langganan topik (Uji D), dan perilaku saat internet
+dimatikan.
 
 ## Catatan penomoran folder
 
 Codelab menyarankan folder `06-week-6-authentication-security-fcm/`. Proyek ini
 berada di `09-week-9/campus_notify` karena mengikuti penomoran repository ini,
-yang memang bergeser dari codelab — misalnya `07-week-7/` berisi materi week 5
+yang memang bergeser dari codelab - misalnya `07-week-7/` berisi materi week 5
 (`week5_offline_notes`). Struktur di dalam folder (`lib/`, `test/`, `docs/`,
 `README.md`, `screenshots/`) sudah sesuai yang diminta.
 
@@ -205,37 +242,49 @@ lib/
 ├── main.dart
 ├── routes.dart
 ├── data/          token_store, auth_repository, session_keeper, api_client, api_errors
-├── providers/     auth_provider, app_providers (router + push)
+├── notifications/ inbox_item, inbox_store, message_mapper
+├── providers/     auth_provider, inbox_provider, app_providers (router + push)
 ├── messaging/     push_service, notification_route
-└── pages/         login, home, announcement, debug
-docs/              payload contoh + catatan implementasi
+└── pages/         login, home, inbox, announcement, debug
+android/app/src/main/
+├── AndroidManifest.xml    channel + suara default untuk FCM
+└── res/raw/notif.wav      suara notifikasi kustom
+docs/              payload contoh, panduan belajar, catatan implementasi
 screenshots/       bukti uji tiga app state
 test/              unit + widget test
+tool/              demo.bat, buat_suara.py
 ```
 
 ## Dokumen pendukung
 
-- [`docs/praktikum-3-implementasi.md`](docs/praktikum-3-implementasi.md) —
+- [`docs/panduan-belajar.md`](docs/panduan-belajar.md) - penjelasan empat tugas
+  Minggu 9: apa yang dibangun, mengapa dipilih cara itu, konsep yang dipakai,
+  jebakan yang sudah dilewati, dan urutan demo.
+- [`docs/praktikum-3-implementasi.md`](docs/praktikum-3-implementasi.md) -
   pemetaan tiap butir praktikum ke kode, plus catatan jebakan.
-- [`docs/android-studio.md`](docs/android-studio.md) — setup Android Studio,
+- [`docs/android-studio.md`](docs/android-studio.md) - setup Android Studio,
   emulator Play Store, Firebase, dan masalah umum.
-- [`docs/fcm-kirim-pesan.md`](docs/fcm-kirim-pesan.md) — cara mengirim pesan uji
+- [`docs/fcm-kirim-pesan.md`](docs/fcm-kirim-pesan.md) - cara mengirim pesan uji
   (Console, HTTP v1, atau tombol Debug).
-- [`docs/fcm-payload.json`](docs/fcm-payload.json) — payload siap kirim.
-- [`docs/uji-tiga-state.md`](docs/uji-tiga-state.md) — tabel uji
+- [`docs/fcm-payload.json`](docs/fcm-payload.json) - payload siap kirim.
+- [`docs/uji-tiga-state.md`](docs/uji-tiga-state.md) - tabel uji
   foreground/background/terminated yang harus diisi setelah uji perangkat.
-- [`docs/verifikasi-ai.md`](docs/verifikasi-ai.md) — checklist verifikasi draf AI
+- [`docs/verifikasi-ai.md`](docs/verifikasi-ai.md) - checklist verifikasi draf AI
   beserta bukti kodenya.
-- [`docs/ai-challenge/`](docs/ai-challenge/README.md) — prompt, draf awal AI,
+- [`docs/ai-challenge/`](docs/ai-challenge/README.md) - prompt, draf awal AI,
   dan daftar perbaikan manual (15 temuan: 5 dari analyzer, 10 dari pembacaan
   ulang).
-- [`docs/refleksi.md`](docs/refleksi.md) — jawaban empat pertanyaan refleksi
+- [`docs/refleksi.md`](docs/refleksi.md) - jawaban empat pertanyaan refleksi
   codelab, dirujuk ke kode dan temuan audit.
 
 ## Referensi
 
-- [Codelab Minggu 6 — Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/06-minggu-6-authentication-security-fcm/index.html)
-- [Slide Week 6 — Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/00-slides/Week_06_Authentication_Security_FCM.html)
+- [Codelab Minggu 6 - Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/06-minggu-6-authentication-security-fcm/index.html)
+- [Slide Week 6 - Authentication, Security & FCM](https://jti-polinema.github.io/flutter-codelab/00-slides/Week_06_Authentication_Security_FCM.html)
+- [Laravel Sanctum](https://laravel.com/docs/sanctum)
+- [Android: notification channels](https://developer.android.com/develop/ui/views/notifications/channels)
+- [Android: notification badges](https://developer.android.com/develop/ui/views/notifications/badges)
+- [shared_preferences (SharedPreferencesAsync)](https://pub.dev/packages/shared_preferences)
 - [FCM Flutter client (setup & token)](https://firebase.google.com/docs/cloud-messaging/flutter/client)
 - [FCM message types: notification vs data](https://firebase.google.com/docs/cloud-messaging/concept-options)
 - [Firebase Auth for Flutter](https://firebase.google.com/docs/auth/flutter/start)
