@@ -7,12 +7,12 @@ Codelab Minggu 6 meminta empat hal disimpan: **prompt**, **output awal AI**,
 | --- | --- |
 | [`01-prompt.md`](01-prompt.md) | Tiga prompt yang dipakai, apa adanya |
 | [`02-draf-awal-ai.md`](02-draf-awal-ai.md) | Kode draf pertama + hasil `flutter analyze` pertamanya |
-| [`03-perbaikan-manual.md`](03-perbaikan-manual.md) | 13 temuan: 5 dari analyzer, 8 dari pembacaan ulang |
+| [`03-perbaikan-manual.md`](03-perbaikan-manual.md) | 15 temuan: 5 dari analyzer, 10 dari pembacaan ulang |
 | [`../uji-tiga-state.md`](../uji-tiga-state.md) | Tabel uji foreground/background/terminated |
 
 ## Inti yang perlu bisa dijelaskan saat demo
 
-**Hanya 5 dari 13 masalah yang dilaporkan analyzer.** Sisanya tidak akan pernah
+**Hanya 5 dari 15 masalah yang dilaporkan analyzer.** Sisanya tidak akan pernah
 muncul di terminal, dan sebagian besar justru yang paling mahal:
 
 - channel notifikasi tidak dibuat → banner FCM background dibuang Android
@@ -20,9 +20,14 @@ muncul di terminal, dan sebagian besar justru yang paling mahal:
 - token hanya di-print → backend menyimpan nilai basi, push berhenti diam-diam
   setelah reinstall,
 - deep link hilang saat sesi habis → pengguna mendarat di beranda dan mengira
-  aplikasinya rusak.
+  aplikasinya rusak,
+- flag manifest `firebase_messaging_installation_id_enabled` tidak ada →
+  `register()` melempar `IllegalStateException` dan ID perangkat tidak pernah
+  sampai ke backend,
+- registrasi perangkat terjadi sebelum login → backend menyimpan ID tanpa
+  pemilik.
 
-Ketiganya lolos `flutter analyze` dengan nilai 100%.
+Kelima temuan di atas lolos `flutter analyze` dengan nilai 100%.
 
 ## Yang saya tolak dari draf AI
 

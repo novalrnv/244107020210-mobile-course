@@ -93,6 +93,17 @@ class PushService {
   bool _attached = false;
   bool _localReady = false;
 
+  /// ID perangkat terakhir yang diterima dari `onRegistered`.
+  ///
+  /// Disimpan supaya bisa dikirim ulang setelah pengguna login: registrasi
+  /// berjalan di [attach] sebelum sesi ada, jadi kiriman pertama tidak punya
+  /// konteks user.
+  String? _lastRegistrationId;
+
+  /// `true` setelah listener di [attach] terpasang. Mencegah [syncDeviceToBackend]
+  /// berjalan sebelum ada yang menerima hasil registrasi.
+  bool _listenersReady = false;
+
   /// Inisialisasi Firebase. Mengembalikan `false` bila `google-services.json`
   /// belum dipasang, supaya aplikasi tetap bisa dijalankan tanpa crash.
   static Future<bool> ensureFirebase() async {
@@ -147,6 +158,7 @@ class PushService {
 
     await syncToken();
     await subscribeToTopic();
+    _listenersReady = true;
     await handleTerminatedMessage();
   }
 
@@ -216,6 +228,24 @@ class PushService {
     } finally {
       await subscription.cancel();
     }
+  }
+
+  /// Mengirim ulang ID perangkat yang sudah diperoleh ke backend.
+  ///
+  /// Registrasi FCM berjalan di [attach], yaitu sebelum pengguna login. Kiriman
+  /// pertama karena itu tidak punya konteks user, sehingga `POST /devices` tidak
+  /// bisa menyimpannya per pengguna. Method ini dipanggil sekali setiap login
+  /// berhasil. Bila ID belum pernah diterima, registrasi dicoba ulang — hasilnya
+  /// tetap dikirim oleh listener `onRegistered` di [attach].
+  Future<void> syncDeviceToBackend() async {
+    if (!_firebaseReady || !_listenersReady) return;
+
+    final id = _lastRegistrationId;
+    if (id == null) {
+      await syncToken();
+      return;
+    }
+    await _sendTokenToBackend(id);
   }
 
   Future<void> subscribeToTopic() async {
@@ -292,6 +322,7 @@ class PushService {
   }
 
   Future<void> _sendTokenToBackend(String token) async {
+    _lastRegistrationId = token;
     _set(tokenPreview: maskToken(token), tokenUpdatedAt: DateTime.now());
     try {
       await _dio.post<dynamic>(

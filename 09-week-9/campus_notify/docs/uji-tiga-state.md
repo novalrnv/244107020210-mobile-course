@@ -36,6 +36,7 @@ payload` FCM.
 | --- | --- | --- |
 | Buka halaman Debug | ID perangkat tampil terpotong 12 karakter | |
 | Hapus data aplikasi / reinstall, buka lagi | `onRegistered` mengirim ID baru; ID di backend berubah | |
+| Login → lihat **Sinkronisasi terakhir** | Tertulis "Token terkirim ke POST /devices" (kiriman ulang atas nama user) | |
 | Matikan internet, tekan **Registrasi FCM** | Pesan ramah, bukan crash | |
 | Tolak izin notifikasi | Status "Belum", banner tidak muncul | |
 | Login → hapus token di backend → buka pengumuman | 401 → refresh → retry berhasil tanpa login ulang | |

@@ -41,17 +41,21 @@ curl -X POST \
   -d @docs/fcm-payload.json
 ```
 
-Untuk pesan personal, ganti blok `topic` dengan token perangkat:
+Untuk pesan personal, ganti blok `topic` dengan ID perangkat dari halaman
+Debug. FCM HTTP v1 kini menyarankan field **`fid`**:
 
 ```json
 {
   "message": {
-    "token": "<ID perangkat dari halaman Debug>",
+    "fid": "<Firebase Installation ID dari halaman Debug>",
     "notification": { "title": "...", "body": "..." },
     "data": { "route": "/pengumuman/3", "id": "3" }
   }
 }
 ```
+
+Field `token` masih menerima nilai yang sama **hanya selama masa migrasi** dan
+akan dihapus, jadi pakai `fid` untuk kode baru.
 
 ## 3. Tanpa Firebase: tombol di halaman Debug
 

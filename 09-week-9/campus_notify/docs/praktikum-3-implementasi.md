@@ -72,8 +72,32 @@ langsung untuk instance aplikasi. Kode memakai API baru; kode codelab yang masih
 memakai `getToken()` tetap jalan, tetapi akan memunculkan peringatan analyzer.
 
 Konsekuensi praktis: endpoint `POST /devices` menerima `fcm_token` berisi ID
-tersebut. Bila backend memakai FCM HTTP v1, field `token` pada request kirim
-diisi nilai yang sama.
+tersebut. Bila backend memakai FCM HTTP v1, field `fid` pada request kirim diisi
+nilai yang sama.
+
+### Syarat manifest yang mudah terlewat
+
+`register()` **tidak** jalan hanya dengan menambah dependency. Firebase Android
+SDK melempar `IllegalStateException` bila flag berikut tidak ada di manifest:
+
+```xml
+<meta-data
+    android:name="firebase_messaging_installation_id_enabled"
+    android:value="true" />
+```
+
+Tanpa flag itu, `onRegistered` tidak pernah emit, `_sendTokenToBackend` tidak
+pernah dipanggil, dan halaman Debug menampilkan "Gagal registrasi FCM" tanpa
+petunjuk penyebabnya. README paket Flutter tidak menyebut flag ini; sumbernya ada
+di javadoc `FirebaseMessaging.register()` versi Android. Ini temuan yang **tidak**
+terdeteksi analyzer maupun pembacaan ulang kode Dart.
+
+### Registrasi terjadi sebelum login
+
+`attach()` dipanggil di `main()` sebelum sesi ada, jadi kiriman pertama tidak
+punya konteks user. Karena itu `PushService.syncDeviceToBackend()` dipanggil
+ulang setiap login berhasil (dan saat aplikasi dibuka dengan sesi yang masih
+aktif) agar `POST /devices` bisa menyimpan ID atas nama pengguna tersebut.
 
 ## Bukti manual yang masih harus diisi
 

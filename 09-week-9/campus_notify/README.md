@@ -147,7 +147,7 @@ flutter analyze
 flutter test
 ```
 
-Hasil terakhir: `flutter analyze` bersih, 22 test lulus. Yang diuji:
+Hasil terakhir: `flutter analyze` bersih, 26 test lulus. Yang diuji:
 
 | File | Cakupan |
 | --- | --- |
@@ -156,6 +156,7 @@ Hasil terakhir: `flutter analyze` bersih, 22 test lulus. Yang diuji:
 | `test/api_errors_test.dart` | 401/timeout/offline/5xx → pesan ramah |
 | `test/auth_notifier_test.dart` | login menyimpan token, logout menghapus |
 | `test/app_test.dart` | guard route menahan di `/login`, login membuka beranda |
+| `test/push_service_test.dart` | `maskToken` memotong ID, `syncDeviceToBackend` aman tanpa Firebase |
 
 ## AI Challenge
 
@@ -166,7 +167,7 @@ disimpan di `docs/`. Isinya:
 | --- | --- |
 | `docs/ai-challenge/01-prompt.md` | Tiga prompt yang dipakai, apa adanya |
 | `docs/ai-challenge/02-draf-awal-ai.md` | Kode draf pertama + kegagalan analyzer-nya |
-| `docs/ai-challenge/03-perbaikan-manual.md` | 13 temuan: **5 dari analyzer, 8 dari pembacaan ulang** |
+| `docs/ai-challenge/03-perbaikan-manual.md` | 15 temuan: **5 dari analyzer, 10 dari pembacaan ulang** |
 | `docs/uji-tiga-state.md` | Tabel uji yang harus diisi setelah uji perangkat |
 
 Temuan yang paling penting justru yang tidak dilaporkan analyzer: channel
@@ -203,5 +204,5 @@ test/              unit + widget test
 - [`docs/verifikasi-ai.md`](docs/verifikasi-ai.md) — checklist verifikasi draf AI
   beserta bukti kodenya.
 - [`docs/ai-challenge/`](docs/ai-challenge/README.md) — prompt, draf awal AI,
-  dan daftar perbaikan manual (13 temuan: 5 dari analyzer, 8 dari pembacaan
+  dan daftar perbaikan manual (15 temuan: 5 dari analyzer, 10 dari pembacaan
   ulang).

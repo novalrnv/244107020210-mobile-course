@@ -14,6 +14,13 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@mipmap/ic_launcher" />
+        <!-- Wajib untuk firebase_messaging 17: tanpa flag ini
+             FirebaseMessaging.register() melempar IllegalStateException,
+             sehingga onRegistered tidak pernah emit dan token tidak pernah
+             sampai ke backend. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -27,7 +27,8 @@ Future<void> main() async {
   // Push didaftarkan setelah UI hidup supaya getInitialMessage bisa langsung
   // menavigasi tanpa menunggu frame pertama.
   final router = container.read(routerProvider);
-  await container.read(pushServiceProvider).attach(
+  final push = container.read(pushServiceProvider);
+  await push.attach(
     go: (route) {
       final loggedIn = container.read(authStateProvider).value ?? false;
       if (!loggedIn) {
@@ -37,6 +38,12 @@ Future<void> main() async {
       router.go(route);
     },
   );
+
+  // Sesi yang sudah aktif saat aplikasi dibuka: ID perangkat perlu dikirim
+  // ulang karena registrasi di attach() berjalan tanpa konteks user.
+  if (container.read(authStateProvider).value ?? false) {
+    await push.syncDeviceToBackend();
+  }
 }
 
 class CampusNotifyApp extends ConsumerWidget {
@@ -51,6 +58,8 @@ class CampusNotifyApp extends ConsumerWidget {
       final wasLoggedIn = previous?.value ?? false;
       final isLoggedIn = next.value ?? false;
       if (!wasLoggedIn && isLoggedIn) {
+        // ID perangkat dikirim ulang atas nama user yang baru login.
+        ref.read(pushServiceProvider).syncDeviceToBackend();
         final pending = ref.read(deepLinkBufferProvider).take();
         if (pending != null) router.go(pending);
       }

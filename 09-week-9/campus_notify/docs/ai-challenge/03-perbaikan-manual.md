@@ -203,6 +203,70 @@ sumber, dipakai GoRouter dan `AppRoutes.announcement(id)`.
 
 ---
 
+## C. Ditemukan setelah audit lanjutan (analyzer diam, kode terlihat benar)
+
+Dua temuan ini tidak muncul saat `push_service.dart` dibaca sendirian. Keduanya
+baru terlihat setelah kode dibandingkan dengan dokumentasi SDK native dan urutan
+hidup aplikasi.
+
+### C1. `register()` butuh flag manifest yang tidak didokumentasikan Flutter
+
+`firebase_messaging` 17 mengganti `getToken()` dengan `register()`. Yang tidak
+disebut di README paket Flutter: `FirebaseMessaging.register()` pada SDK Android
+melempar `IllegalStateException` bila flag berikut tidak ada.
+
+```xml
+<meta-data
+    android:name="firebase_messaging_installation_id_enabled"
+    android:value="true" />
+```
+
+Rantai kegagalannya:
+
+```
+register() -> IllegalStateException
+           -> ditangkap syncToken()  -> status "Gagal registrasi FCM"
+           -> onRegistered tidak pernah emit
+           -> _sendTokenToBackend() tidak pernah dipanggil
+           -> POST /devices tidak pernah terjadi
+```
+
+Gejalanya menipu: aplikasi jalan normal, izin notifikasi bisa diberikan, topik
+bisa di-subscribe, halaman Debug tidak crash — hanya ID perangkat yang tetap
+kosong. Karena tidak ada error yang menunjuk manifest, temuan ini lolos dari
+checklist versi pertama yang menyatakan "Lulus".
+
+Sumber: javadoc `FirebaseMessaging.register()` di Firebase Android SDK, dan
+`example/android/app/src/main/AndroidManifest.xml` di paket
+`firebase_messaging-17.0.1`.
+
+### C2. Registrasi perangkat terjadi sebelum login
+
+`attach()` dipanggil di `main()` tepat setelah `runApp`, yaitu sebelum pengguna
+punya sesi. `POST /devices` karena itu menerima ID tanpa identitas user, dan
+setelah login tidak ada mekanisme yang mengirim ulang.
+
+Perbaikan: ID terakhir disimpan di `_lastRegistrationId`, lalu dikirim ulang oleh
+`syncDeviceToBackend()` pada dua titik — login berhasil (`main.dart`, listener
+`authStateProvider`) dan saat aplikasi dibuka dengan sesi yang masih aktif.
+
+```dart
+Future<void> syncDeviceToBackend() async {
+  if (!_firebaseReady || !_listenersReady) return;
+  final id = _lastRegistrationId;
+  if (id == null) {
+    await syncToken(); // listener onRegistered yang mengirim
+    return;
+  }
+  await _sendTokenToBackend(id);
+}
+```
+
+Penanda `_listenersReady` mencegah method ini berjalan di tengah `attach()`,
+saat belum ada listener yang menerima hasil registrasi.
+
+---
+
 ## Ringkasan
 
 | # | Temuan | Jenis | Terdeteksi oleh |
@@ -212,15 +276,16 @@ sumber, dipakai GoRouter dan `AppRoutes.announcement(id)`.
 | A3 | `transformTimeout` tidak ditangani | compile error | analyzer |
 | A4 | `prefer_initializing_formals` | lint | analyzer |
 | A5 | `unused_import` | lint | analyzer |
-| B1 | Channel notifikasi tidak dibuat | perilaku | uji perangkat |
-| B2 | Token tidak dikirim ke backend | perilaku | baca ulang checklist |
+| B1 | Channel notifikasi tidak dibuat | perilaku | uji perangkat || B2 | Token tidak dikirim ke backend | perilaku | baca ulang checklist |
 | B3 | Token utuh bisa tampil | keamanan | baca ulang checklist |
 | B4 | `pendingDeepLink` global | perilaku | baca ulang kode |
 | B5 | Deep link hilang saat sesi habis | perilaku | skenario uji |
 | B6 | Payload tipe salah diloloskan | ketahanan | unit test |
 | B7 | `getInitialMessage` sebelum router | perilaku | uji terminated |
 | B8 | String rute tersebar | maintainability | refactor |
+| C1 | Flag manifest `installation_id_enabled` tidak ada | perilaku | audit dokumen SDK native |
+| C2 | Registrasi perangkat sebelum login | perilaku | audit urutan hidup aplikasi |
 
-Dari 13 temuan, hanya **5** yang dilaporkan analyzer. Delapan sisanya hanya
+Dari 15 temuan, hanya **5** yang dilaporkan analyzer. Sepuluh sisanya hanya
 muncul kalau kode dibaca ulang terhadap checklist dan diuji di perangkat —
 persis alasan codelab menyatakan AI tidak boleh jadi penentu akhir.
