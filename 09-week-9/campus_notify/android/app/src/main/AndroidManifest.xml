@@ -7,10 +7,16 @@
         android:label="Campus Notify"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- Channel default untuk pesan notification payload dari FCM. -->
+        <!-- Channel default untuk pesan notification payload dari FCM.
+             Harus sama dengan channel yang dibuat di PushService, kalau tidak
+             Android membuang notifikasi karena channel-nya tidak ada. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="pengumuman" />
+            android:value="pengumuman_v2" />
+        <!-- Suara kustom untuk banner FCM saat aplikasi di background. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_sound"
+            android:value="notif" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@mipmap/ic_launcher" />

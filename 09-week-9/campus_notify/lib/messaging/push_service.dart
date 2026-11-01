@@ -95,7 +95,20 @@ class PushService {
   }
 
   static const topic = 'pengumuman-kampus';
-  static const _channelId = 'pengumuman';
+
+  /// ID channel sengaja diberi akhiran versi.
+  ///
+  /// Android tidak mengizinkan channel yang sudah ada diubah suaranya. Di
+  /// perangkat uji, channel `pengumuman` sudah pernah dibuat tanpa suara
+  /// kustom; memakai ID yang sama akan membuat suara baru diabaikan diam-diam.
+  /// ID baru memaksa sistem membuat channel baru dengan pengaturan terbaru.
+  static const channelId = 'pengumuman_v2';
+
+  /// Channel lama yang dibuat versi sebelumnya, dihapus saat inisialisasi.
+  static const _legacyChannelId = 'pengumuman';
+
+  /// Nama file di `android/app/src/main/res/raw/notif.wav` tanpa ekstensi.
+  static const soundName = 'notif';
 
   final Dio _dio;
   final bool _firebaseReady;
@@ -323,7 +336,7 @@ class PushService {
     final unread = await inbox?.all().then((items) => items.length) ?? 0;
 
     final android = AndroidNotificationDetails(
-      _channelId,
+      channelId,
       'Pengumuman Kampus',
       channelDescription: 'Notifikasi pengumuman dan jadwal kampus',
       importance: Importance.high,
@@ -332,10 +345,12 @@ class PushService {
       // menampilkan titik, bukan angka; itu batasan sistem, bukan aplikasi.
       channelShowBadge: true,
       number: unread,
+      // Suara dibundel di aplikasi, bukan suara bawaan sistem.
+      sound: const RawResourceAndroidNotificationSound(soundName),
     );
     final details = NotificationDetails(
       android: android,
-      iOS: const DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(sound: 'notif.wav'),
     );
 
     await _local.show(
@@ -488,14 +503,23 @@ class PushService {
 
     await android.createNotificationChannel(
       const AndroidNotificationChannel(
-        _channelId,
+        channelId,
         'Pengumuman Kampus',
         description: 'Notifikasi pengumuman dan jadwal kampus',
         importance: Importance.high,
         // Menampilkan titik/angka di icon launcher.
         showBadge: true,
+        sound: RawResourceAndroidNotificationSound(soundName),
       ),
     );
+
+    // Channel lama tidak bisa diubah suaranya, jadi dihapus agar tidak
+    // membingungkan pengguna yang membuka pengaturan notifikasi aplikasi.
+    try {
+      await android.deleteNotificationChannel(channelId: _legacyChannelId);
+    } on Object {
+      // Belum pernah ada di perangkat ini: bukan masalah.
+    }
   }
 
   /// Aplikasi dibuka dari notifikasi lokal (foreground -> terminated).
