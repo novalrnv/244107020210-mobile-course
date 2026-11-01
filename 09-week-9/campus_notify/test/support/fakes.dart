@@ -1,5 +1,7 @@
 import 'package:campus_notify/data/auth_repository.dart';
 import 'package:campus_notify/data/token_store.dart';
+import 'package:campus_notify/notifications/inbox_item.dart';
+import 'package:campus_notify/notifications/inbox_store.dart';
 
 /// Token store palsu: tidak menyentuh Keychain/Keystore, jadi bisa dipakai
 /// di unit test dan widget test.
@@ -62,5 +64,20 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> logout(String token) async {
     logoutCalls++;
+  }
+}
+
+/// Penyimpanan kotak masuk palsu: tidak menyentuh SharedPreferences.
+class InMemoryInboxStorage implements InboxStorage {
+  List<InboxItem> items = <InboxItem>[];
+  int writeCount = 0;
+
+  @override
+  Future<List<InboxItem>> read() async => List<InboxItem>.of(items);
+
+  @override
+  Future<void> write(List<InboxItem> items) async {
+    this.items = List<InboxItem>.of(items);
+    writeCount++;
   }
 }

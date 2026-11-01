@@ -8,6 +8,7 @@ class AppRoutes {
   static const login = '/login';
   static const home = '/';
   static const debug = '/debug';
+  static const inbox = '/notifikasi';
 
   /// Pola untuk deklarasi GoRoute.
   static const announcementPattern = '/pengumuman/:id';

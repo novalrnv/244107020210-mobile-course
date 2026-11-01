@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show DartPluginRegistrant;
 
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,18 +9,33 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../data/api_client.dart';
 import '../data/api_errors.dart';
+import '../notifications/inbox_store.dart';
+import '../notifications/message_mapper.dart';
 import 'notification_route.dart';
 
 /// Handler background wajib fungsi top-level.
 ///
 /// Firebase menjalankannya di isolate terpisah, jadi tidak ada BuildContext,
-/// tidak ada Riverpod, dan tidak ada state aplikasi. Tugasnya hanya mencatat
-/// atau menyimpan data ringan. Navigasi dilakukan saat pengguna mengklik
-/// notifikasi, bukan di sini.
+/// tidak ada Riverpod, dan tidak ada state aplikasi. Satu-satunya yang bisa
+/// dilakukan adalah menulis langsung ke penyimpanan, di sini ke kotak masuk.
+///
+/// `DartPluginRegistrant.ensureInitialized()` wajib dipanggil lebih dulu:
+/// tanpa itu plugin SharedPreferences belum terdaftar di isolate ini dan
+/// penulisan gagal diam-diam.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Sengaja kosong: data payload sudah tersimpan oleh sistem dan akan
-  // dibaca lewat getInitialMessage / onMessageOpenedApp.
+  DartPluginRegistrant.ensureInitialized();
+
+  final item = inboxItemFromPayload(
+    messageId: message.messageId,
+    title: message.notification?.title,
+    body: message.notification?.body,
+    data: message.data,
+    receivedAt: DateTime.now(),
+  );
+
+  if (item == null) return;
+  await InboxRepository().add(item);
 }
 
 /// Status yang ditampilkan di halaman Debug. Token selalu dipotong.
@@ -68,9 +84,13 @@ String maskToken(String token) {
 }
 
 class PushService {
-  PushService({required Dio httpClient, bool firebaseReady = false})
-    : _dio = httpClient,
-      _firebaseReady = firebaseReady {
+  PushService({
+    required Dio httpClient,
+    bool firebaseReady = false,
+    this.inbox,
+    this.onInboxChanged,
+  }) : _dio = httpClient,
+       _firebaseReady = firebaseReady {
     _status.value = PushStatus(firebaseReady: firebaseReady);
   }
 
@@ -79,6 +99,14 @@ class PushService {
 
   final Dio _dio;
   final bool _firebaseReady;
+
+  /// Penyimpanan kotak masuk. `null` di unit test yang tidak menguji inbox.
+  final InboxRepository? inbox;
+
+  /// Memberi tahu UI bahwa isi kotak masuk berubah. PushService tidak tahu
+  /// Riverpod, jadi penyegaran diserahkan ke pemanggil.
+  final VoidCallback? onInboxChanged;
+
   final FlutterLocalNotificationsPlugin _local =
       FlutterLocalNotificationsPlugin();
   final ValueNotifier<PushStatus> _status = ValueNotifier(const PushStatus());
@@ -149,11 +177,9 @@ class PushService {
       FirebaseMessaging.onMessage.listen(_onForegroundMessage),
     );
 
-    // Background lalu diklik.
+    // Background lalu diklik: pesan dianggap terbaca.
     _subscriptions.add(
-      FirebaseMessaging.onMessageOpenedApp.listen(
-        (message) => _go?.call(routeFromMessage(message.data)),
-      ),
+      FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened),
     );
 
     await syncToken();
@@ -274,7 +300,7 @@ class PushService {
     try {
       final initial = await FirebaseMessaging.instance.getInitialMessage();
       if (initial != null) {
-        _go?.call(routeFromMessage(initial.data));
+        await _onMessageOpened(initial);
       }
     } on Object {
       // Tidak ada pesan awal: bukan error.
@@ -287,6 +313,7 @@ class PushService {
     required String title,
     required String body,
     required String route,
+    String? inboxId,
   }) async {
     if (!_localReady) {
       await _initLocalNotifications();
@@ -309,16 +336,82 @@ class PushService {
       title: title,
       body: body,
       notificationDetails: details,
-      payload: route,
+      payload: NotificationPayload.encode(route: route, inboxId: inboxId),
     );
   }
 
-  Future<void> _onForegroundMessage(RemoteMessage message) async {
-    await showLocalNotification(
-      title: message.notification?.title ?? 'Pengumuman kampus',
-      body: message.notification?.body ?? '',
-      route: routeFromMessage(message.data),
+  /// Meniru pesan FCM yang masuk: menyimpan ke kotak masuk lalu menampilkan
+  /// banner. Dipakai halaman Debug supaya demo kotak masuk bisa dilakukan tanpa
+  /// menunggu campaign dari Firebase Console.
+  Future<void> simulateIncomingMessage({
+    required String title,
+    required String body,
+    required String route,
+  }) async {
+    final item = inboxItemFromPayload(
+      messageId: 'sim-${DateTime.now().microsecondsSinceEpoch}',
+      title: title,
+      body: body,
+      data: <String, dynamic>{'route': route},
+      receivedAt: DateTime.now(),
     );
+
+    if (item != null) {
+      await inbox?.add(item);
+      onInboxChanged?.call();
+    }
+
+    await showLocalNotification(
+      title: title,
+      body: body,
+      route: route,
+      inboxId: item?.id,
+    );
+  }
+
+  /// Menyimpan notifikasi ke kotak masuk lalu menampilkan banner.
+  Future<void> _onForegroundMessage(RemoteMessage message) async {
+    final title = message.notification?.title ?? 'Pengumuman kampus';
+    final body = message.notification?.body ?? '';
+    final route = routeFromMessage(message.data);
+
+    final item = inboxItemFromPayload(
+      messageId: message.messageId,
+      title: title,
+      body: body,
+      data: message.data,
+      receivedAt: DateTime.now(),
+    );
+
+    if (item != null) {
+      await inbox?.add(item);
+      onInboxChanged?.call();
+    }
+
+    await showLocalNotification(
+      title: title,
+      body: body,
+      route: route,
+      inboxId: item?.id,
+    );
+  }
+
+  /// Notifikasi diketuk dari tray: item dianggap terbaca lalu dihapus.
+  Future<void> _onMessageOpened(RemoteMessage message) async {
+    final item = inboxItemFromPayload(
+      messageId: message.messageId,
+      title: message.notification?.title,
+      body: message.notification?.body,
+      data: message.data,
+      receivedAt: DateTime.now(),
+    );
+
+    if (item != null) {
+      await inbox?.remove(item.id);
+      onInboxChanged?.call();
+    }
+
+    _go?.call(routeFromMessage(message.data));
   }
 
   Future<void> _sendTokenToBackend(String token) async {
@@ -353,15 +446,25 @@ class PushService {
     try {
       await _local.initialize(
         settings: const InitializationSettings(android: android, iOS: ios),
-        onDidReceiveNotificationResponse: (response) {
-          _go?.call(normalizeRoute(response.payload));
-        },
+        onDidReceiveNotificationResponse: _onLocalNotificationTapped,
       );
       _localReady = true;
       await _ensureChannel();
     } on Object {
       _localReady = false;
     }
+  }
+
+  /// Banner lokal diketuk: item dianggap terbaca, lalu halaman tujuan dibuka.
+  Future<void> _onLocalNotificationTapped(NotificationResponse response) async {
+    final payload = NotificationPayload.decode(response.payload);
+
+    if (payload.inboxId != null) {
+      await inbox?.remove(payload.inboxId!);
+      onInboxChanged?.call();
+    }
+
+    _go?.call(payload.route);
   }
 
   /// Android 8+ membuang notifikasi yang channel-nya belum ada.
@@ -391,9 +494,9 @@ class PushService {
     try {
       final launch = await _local.getNotificationAppLaunchDetails();
       if (launch?.didNotificationLaunchApp ?? false) {
-        final payload = launch?.notificationResponse?.payload;
-        if (payload != null && payload.isNotEmpty) {
-          _go?.call(normalizeRoute(payload));
+        final response = launch?.notificationResponse;
+        if (response != null) {
+          await _onLocalNotificationTapped(response);
         }
       }
     } on Object {

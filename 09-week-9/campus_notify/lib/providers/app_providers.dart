@@ -7,9 +7,11 @@ import '../messaging/push_service.dart';
 import '../pages/announcement_page.dart';
 import '../pages/debug_page.dart';
 import '../pages/home_page.dart';
+import '../pages/inbox_page.dart';
 import '../pages/login_page.dart';
 import '../routes.dart';
 import 'auth_provider.dart';
+import 'inbox_provider.dart';
 
 /// Diisi dari `main()` setelah `Firebase.initializeApp()` dicoba.
 /// Default `false` supaya aplikasi tetap jalan tanpa google-services.json.
@@ -23,6 +25,10 @@ final pushServiceProvider = Provider<PushService>((ref) {
   final service = PushService(
     httpClient: ref.watch(dioProvider),
     firebaseReady: ref.watch(firebaseReadyProvider),
+    inbox: ref.watch(inboxRepositoryProvider),
+    // Notifikasi bisa ditulis dari isolate background, jadi UI perlu diminta
+    // membaca ulang penyimpanan setiap kali ada perubahan.
+    onInboxChanged: () => ref.read(inboxProvider.notifier).refresh(),
   );
   ref.onDispose(() {
     service.dispose();
@@ -79,6 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(path: AppRoutes.debug, builder: (_, _) => const DebugPage()),
+      GoRoute(path: AppRoutes.inbox, builder: (_, _) => const InboxPage()),
       GoRoute(
         path: AppRoutes.announcementPattern,
         builder: (_, state) =>

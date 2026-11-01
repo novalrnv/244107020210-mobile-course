@@ -141,7 +141,7 @@ class DebugPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => service.showLocalNotification(
+                onPressed: () => service.simulateIncomingMessage(
                   title: 'Jadwal kuliah berubah',
                   body: 'Kelas Mobile pindah ke Ruang A2 jam 13.00',
                   route: AppRoutes.announcement('3'),

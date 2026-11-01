@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'messaging/push_service.dart';
 import 'providers/app_providers.dart';
 import 'providers/auth_provider.dart';
+import 'providers/inbox_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,11 +47,39 @@ Future<void> main() async {
   }
 }
 
-class CampusNotifyApp extends ConsumerWidget {
+class CampusNotifyApp extends ConsumerStatefulWidget {
   const CampusNotifyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CampusNotifyApp> createState() => _CampusNotifyAppState();
+}
+
+class _CampusNotifyAppState extends ConsumerState<CampusNotifyApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Notifikasi yang datang saat aplikasi di background ditulis oleh isolate
+    // lain. Daftar dibaca ulang ketika aplikasi kembali ke depan, kalau tidak
+    // notifikasi baru tidak akan terlihat sampai aplikasi dibuka ulang.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(inboxProvider.notifier).refresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     // Deep link yang tertahan selama login dikirim setelah sesi aktif.
@@ -60,6 +89,7 @@ class CampusNotifyApp extends ConsumerWidget {
       if (!wasLoggedIn && isLoggedIn) {
         // ID perangkat dikirim ulang atas nama user yang baru login.
         ref.read(pushServiceProvider).syncDeviceToBackend();
+        ref.read(inboxProvider.notifier).refresh();
         final pending = ref.read(deepLinkBufferProvider).take();
         if (pending != null) router.go(pending);
       }

@@ -51,4 +51,39 @@ void main() {
     expect(normalizeRoute('debug'), AppRoutes.debug);
     expect(normalizeRoute(' /pengumuman/4 '), '/pengumuman/4');
   });
+
+  group('NotificationPayload', () {
+    test('membawa route dan id kotak masuk', () {
+      final decoded = NotificationPayload.decode(
+        NotificationPayload.encode(
+          route: 'pengumuman/3',
+          inboxId: 'msg-9',
+        ),
+      );
+
+      expect(decoded.route, '/pengumuman/3');
+      expect(decoded.inboxId, 'msg-9');
+    });
+
+    test('tanpa id kotak masuk tetap menghasilkan route valid', () {
+      final decoded = NotificationPayload.decode(
+        NotificationPayload.encode(route: '/debug'),
+      );
+
+      expect(decoded.route, '/debug');
+      expect(decoded.inboxId, isNull);
+    });
+
+    test('payload lama berisi path saja tetap terbaca', () {
+      final decoded = NotificationPayload.decode('pengumuman/7');
+
+      expect(decoded.route, '/pengumuman/7');
+      expect(decoded.inboxId, isNull);
+    });
+
+    test('payload null atau kosong jatuh ke beranda', () {
+      expect(NotificationPayload.decode(null).route, AppRoutes.home);
+      expect(NotificationPayload.decode('').route, AppRoutes.home);
+    });
+  });
 }
