@@ -1,4 +1,4 @@
-import 'package:campus_notify/pages/inbox_page.dart';
+import 'package:campus_notify/presentation/pages/inbox_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

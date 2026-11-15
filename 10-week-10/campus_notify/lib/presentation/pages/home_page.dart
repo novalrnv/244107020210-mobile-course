@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../messaging/push_service.dart';
+import '../../data/push_service.dart';
+import '../../routes.dart';
 import '../providers/app_providers.dart';
 import '../providers/auth_provider.dart';
 import '../providers/inbox_provider.dart';
-import '../routes.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});

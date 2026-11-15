@@ -7,10 +7,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../data/api_client.dart';
-import '../data/api_errors.dart';
-import '../notifications/inbox_store.dart';
-import '../notifications/message_mapper.dart';
+import 'api_client.dart';
+import 'api_errors.dart';
+import 'inbox_store.dart';
+import 'message_mapper.dart';
 import 'notification_route.dart';
 
 /// Handler background wajib fungsi top-level.

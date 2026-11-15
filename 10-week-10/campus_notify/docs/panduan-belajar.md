@@ -60,7 +60,7 @@ Sisi Flutter:
 | --- | --- |
 | `lib/data/auth_repository.dart` | klien HTTP ke `/login`, `/refresh`, `/logout` |
 | `lib/data/token_store.dart` | simpan token di `flutter_secure_storage` |
-| `lib/providers/auth_provider.dart` | `AuthNotifier`: login, logout, status sesi |
+| `lib/presentation/providers/auth_provider.dart` | `AuthNotifier`: login, logout, status sesi |
 | `lib/data/api_client.dart` | `ApiConfig.baseUrl`, interceptor 401 |
 
 ### Konsep yang dipakai
@@ -128,12 +128,12 @@ dibaca, item itu hilang dari daftar.
 
 | Berkas | Peran |
 | --- | --- |
-| `lib/notifications/inbox_item.dart` | model satu notifikasi, plus `toJson`/`fromJson` yang tahan data rusak |
-| `lib/notifications/inbox_store.dart` | `InboxStorage` (antarmuka), `PrefsInboxStorage` (nyata), `InboxRepository` (operasi) |
-| `lib/notifications/message_mapper.dart` | mengubah isi pesan jadi `InboxItem`, tanpa bergantung pada Firebase |
-| `lib/providers/inbox_provider.dart` | `inboxProvider`, `unreadCountProvider` |
-| `lib/pages/inbox_page.dart` | halaman `/notifikasi` |
-| `lib/messaging/push_service.dart` | menangkap pesan dari empat jalur, menulis ke kotak masuk |
+| `lib/domain/inbox_item.dart` | model satu notifikasi, plus `toJson`/`fromJson` yang tahan data rusak |
+| `lib/data/inbox_store.dart` | `InboxStorage` (antarmuka), `PrefsInboxStorage` (nyata), `InboxRepository` (operasi) |
+| `lib/data/message_mapper.dart` | mengubah isi pesan jadi `InboxItem`, tanpa bergantung pada Firebase |
+| `lib/presentation/providers/inbox_provider.dart` | `inboxProvider`, `unreadCountProvider` |
+| `lib/presentation/pages/inbox_page.dart` | halaman `/notifikasi` |
+| `lib/data/push_service.dart` | menangkap pesan dari empat jalur, menulis ke kotak masuk |
 
 ### Empat jalur masuknya pesan
 
@@ -206,7 +206,7 @@ inbox:<id>|<route>
 ```
 
 `NotificationPayload.encode` dan `NotificationPayload.decode` di
-`lib/messaging/notification_route.dart` mengurus format ini. Saat banner
+`lib/data/notification_route.dart` mengurus format ini. Saat banner
 diketuk, `_onLocalNotificationTapped` membaca ID, menghapus item yang tepat,
 lalu navigasi.
 
@@ -235,7 +235,7 @@ Ini bagian yang paling sering salah dipahami. Ada dua "icon" yang berbeda:
 | Lonceng di AppBar | `Badge.count` di dalam aplikasi | angka pasti, misal `1` |
 | Icon aplikasi di launcher | sistem, dari `showBadge` pada channel | titik, atau angka kalau launcher mendukung |
 
-`Badge.count` di `lib/pages/home_page.dart`:
+`Badge.count` di `lib/presentation/pages/home_page.dart`:
 
 ```dart
 Badge.count(
@@ -375,28 +375,31 @@ Ini bagian yang paling berguna kalau nanti ada masalah serupa.
 
 ```
 lib/
+├── domain/
+│   ├── announcement.dart        entitas pengumuman
+│   └── inbox_item.dart          model satu notifikasi
 ├── data/
 │   ├── auth_repository.dart     login, refresh, logout ke API
 │   ├── token_store.dart         secure storage + timeout
 │   ├── api_client.dart          ApiConfig.baseUrl, interceptor 401
-│   └── session_keeper.dart      refresh sekali lalu retry
-├── notifications/
-│   ├── inbox_item.dart          model satu notifikasi
+│   ├── session_keeper.dart      refresh sekali lalu retry
+│   ├── announcement_repository.dart  data contoh pengumuman
 │   ├── inbox_store.dart         InboxStorage, PrefsInboxStorage, InboxRepository
-│   └── message_mapper.dart      pesan -> InboxItem (FNV-1a)
-├── providers/
-│   ├── auth_provider.dart       AuthNotifier
-│   ├── inbox_provider.dart      inboxProvider, unreadCountProvider
-│   └── app_providers.dart       router + PushService
-├── messaging/
+│   ├── message_mapper.dart      pesan -> InboxItem (FNV-1a)
 │   ├── push_service.dart        channel, suara, banner, empat jalur pesan
-│   └── notification_route.dart  parsing route + NotificationPayload
-└── pages/
-    ├── login_page.dart
-    ├── home_page.dart           lonceng + Badge.count
-    ├── inbox_page.dart          /notifikasi
-    ├── announcement_page.dart   /pengumuman/:id
-    └── debug_page.dart          bukti izin, ID, uji banner
+│   ├── notification_route.dart  parsing route + NotificationPayload
+│   └── api_errors.dart          DioException -> kalimat untuk pengguna
+└── presentation/
+    ├── providers/
+    │   ├── auth_provider.dart   AuthNotifier
+    │   ├── inbox_provider.dart  inboxProvider, unreadCountProvider
+    │   └── app_providers.dart   router + PushService
+    └── pages/
+        ├── login_page.dart
+        ├── home_page.dart           lonceng + Badge.count
+        ├── inbox_page.dart          /notifikasi
+        ├── announcement_page.dart   /pengumuman/:id
+        └── debug_page.dart          bukti izin, ID, uji banner
 
 android/app/src/main/
 ├── AndroidManifest.xml          channel + suara default untuk FCM

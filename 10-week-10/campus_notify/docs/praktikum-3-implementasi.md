@@ -5,7 +5,7 @@ keputusan yang menyimpang dari contoh codelab.
 
 ## 1. Background handler wajib top-level
 
-`lib/messaging/push_service.dart`
+`lib/data/push_service.dart`
 
 ```dart
 @pragma('vm:entry-point')
@@ -35,7 +35,7 @@ saat terminated dipakai `getNotificationAppLaunchDetails()`.
 
 ### Deep link saat sesi habis
 
-`lib/providers/app_providers.dart` — `DeepLinkBuffer`
+`lib/presentation/providers/app_providers.dart` — `DeepLinkBuffer`
 
 Klik notifikasi ketika token sudah kedaluwarsa akan ditolak guard route.
 Route-nya disimpan dulu, lalu dikirim setelah login berhasil. Tanpa buffer ini

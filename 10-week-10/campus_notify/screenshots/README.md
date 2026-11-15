@@ -12,6 +12,10 @@ Simpan bukti uji di folder ini dengan nama file berikut.
 | `terminated-banner.png` | Banner sistem saat aplikasi sudah di-swipe-close |
 | `terminated-deeplink.png` | Aplikasi terbuka langsung di `/pengumuman/3` |
 | `fcm-console-test.png` | Campaign percobaan di Firebase Console |
+| `struktur-sebelum.png` | Pohon `lib/` sebelum refactor layer-first: `data/`, `messaging/`, `notifications/`, `pages/`, `providers/` |
+| `struktur-sesudah.png` | Pohon `lib/` sesudah refactor: `data/`, `domain/`, `presentation/` |
+| `analyze-bersih.png` | Terminal `flutter analyze` → `No issues found!` |
+| `test-lulus.png` | Terminal `flutter test` → `All tests passed!` beserta jumlah tes (`+55`) |
 
 Aturan: **jangan** pernah menampilkan token atau ID perangkat secara penuh di
 screenshot. Nilai penuh cukup dicatat di laporan pribadi, bukan di repository.

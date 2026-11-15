@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'inbox_item.dart';
+import '../domain/inbox_item.dart';
 
 /// Penyimpanan kotak masuk notifikasi.
 ///

@@ -1,4 +1,4 @@
-import 'package:campus_notify/notifications/message_mapper.dart';
+import 'package:campus_notify/data/message_mapper.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

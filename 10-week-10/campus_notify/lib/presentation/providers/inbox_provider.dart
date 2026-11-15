@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../notifications/inbox_item.dart';
-import '../notifications/inbox_store.dart';
+import '../../data/inbox_store.dart';
+import '../../domain/inbox_item.dart';
 
 final inboxRepositoryProvider = Provider<InboxRepository>(
   (ref) => InboxRepository(),

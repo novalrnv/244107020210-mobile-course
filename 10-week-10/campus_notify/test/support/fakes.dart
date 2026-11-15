@@ -1,7 +1,7 @@
 import 'package:campus_notify/data/auth_repository.dart';
 import 'package:campus_notify/data/token_store.dart';
-import 'package:campus_notify/notifications/inbox_item.dart';
-import 'package:campus_notify/notifications/inbox_store.dart';
+import 'package:campus_notify/data/inbox_store.dart';
+import 'package:campus_notify/domain/inbox_item.dart';
 
 /// Token store palsu: tidak menyentuh Keychain/Keystore, jadi bisa dipakai
 /// di unit test dan widget test.

@@ -1,5 +1,5 @@
-import '../messaging/notification_route.dart';
-import 'inbox_item.dart';
+import '../domain/inbox_item.dart';
+import 'notification_route.dart';
 
 /// Membentuk item kotak masuk dari isi pesan FCM.
 ///

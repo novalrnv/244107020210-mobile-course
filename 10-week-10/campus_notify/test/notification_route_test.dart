@@ -1,4 +1,4 @@
-import 'package:campus_notify/messaging/notification_route.dart';
+import 'package:campus_notify/data/notification_route.dart';
 import 'package:campus_notify/routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 

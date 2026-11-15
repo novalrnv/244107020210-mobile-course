@@ -1,7 +1,7 @@
 import 'package:campus_notify/main.dart';
-import 'package:campus_notify/notifications/inbox_store.dart';
-import 'package:campus_notify/providers/auth_provider.dart';
-import 'package:campus_notify/providers/inbox_provider.dart';
+import 'package:campus_notify/data/inbox_store.dart';
+import 'package:campus_notify/presentation/providers/auth_provider.dart';
+import 'package:campus_notify/presentation/providers/inbox_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -5,7 +5,7 @@ demo: setiap klaim harus bisa ditunjukkan di layar.
 
 | Butir checklist | Status | Bukti |
 | --- | --- | --- |
-| Background handler berupa fungsi top-level dengan `@pragma('vm:entry-point')` | Lulus | `lib/messaging/push_service.dart` — `firebaseMessagingBackgroundHandler` di luar kelas |
+| Background handler berupa fungsi top-level dengan `@pragma('vm:entry-point')` | Lulus | `lib/data/push_service.dart` — `firebaseMessagingBackgroundHandler` di luar kelas |
 | `onTokenRefresh`/`onRegistered` benar-benar mengirim ke backend, bukan hanya `print` | Lulus (setelah 1 perbaikan) | `_sendTokenToBackend()` → `POST /devices` dengan `fcm_token` + `platform`. Sempat **gagal total**: `register()` melempar `IllegalStateException` karena flag `firebase_messaging_installation_id_enabled` belum ada di manifest. Lihat temuan C1 |
 | Foreground memakai local notification manual | Lulus | `_onForegroundMessage()` → `showLocalNotification()` |
 | Klik dari tiga state masuk ke rute yang benar | **Perlu bukti manual** | Isi `docs/uji-tiga-state.md` setelah uji perangkat |
@@ -31,7 +31,7 @@ dan tidak terlihat dari membaca `push_service.dart` sendirian.
 
 ```bash
 flutter analyze   # No issues found
-flutter test      # 26 test lulus
+flutter test      # 55 test lulus
 ```
 
 | File test | Cakupan |

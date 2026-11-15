@@ -1,5 +1,5 @@
-import 'package:campus_notify/notifications/inbox_item.dart';
-import 'package:campus_notify/notifications/inbox_store.dart';
+import 'package:campus_notify/data/inbox_store.dart';
+import 'package:campus_notify/domain/inbox_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fakes.dart';

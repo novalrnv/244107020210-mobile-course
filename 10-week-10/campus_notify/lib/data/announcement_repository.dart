@@ -1,16 +1,4 @@
-class Announcement {
-  const Announcement({
-    required this.id,
-    required this.title,
-    required this.date,
-    required this.body,
-  });
-
-  final String id;
-  final String title;
-  final String date;
-  final String body;
-}
+import '../domain/announcement.dart';
 
 /// Data contoh supaya halaman tujuan deep link punya isi tanpa backend.
 /// Ganti dengan repository yang memanggil API kampus saat sudah tersedia.

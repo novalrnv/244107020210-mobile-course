@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../routes.dart';
 import '../providers/app_providers.dart';
-import '../routes.dart';
 
 class AnnouncementPage extends ConsumerWidget {
   const AnnouncementPage({super.key, required this.id});

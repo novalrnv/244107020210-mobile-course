@@ -1,6 +1,6 @@
-import 'package:campus_notify/notifications/inbox_item.dart';
-import 'package:campus_notify/notifications/inbox_store.dart';
-import 'package:campus_notify/providers/inbox_provider.dart';
+import 'package:campus_notify/data/inbox_store.dart';
+import 'package:campus_notify/domain/inbox_item.dart';
+import 'package:campus_notify/presentation/providers/inbox_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

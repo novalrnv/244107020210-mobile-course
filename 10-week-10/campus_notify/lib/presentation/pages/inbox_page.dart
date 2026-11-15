@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../notifications/inbox_item.dart';
+import '../../domain/inbox_item.dart';
 import '../providers/inbox_provider.dart';
 
 /// Daftar notifikasi yang masuk. Item yang dibaca langsung hilang, sesuai

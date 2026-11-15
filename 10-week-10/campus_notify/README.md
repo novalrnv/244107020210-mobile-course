@@ -35,19 +35,19 @@ Penjelasan lengkap tiap tugas, konsep yang dipakai, dan jebakannya ada di
 | Fitur | Lokasi |
 | --- | --- |
 | Login lewat API Laravel (Sanctum) | `lib/data/auth_repository.dart` |
-| Kotak masuk notifikasi | `lib/notifications/`, `lib/pages/inbox_page.dart` |
-| Badge jumlah belum dibaca | `lib/pages/home_page.dart`, `lib/providers/inbox_provider.dart` |
-| Suara notifikasi kustom | `lib/messaging/push_service.dart`, `android/app/src/main/res/raw/notif.wav` |
-| Background handler top-level | `lib/messaging/push_service.dart` |
-| Foreground: banner lokal manual | `lib/messaging/push_service.dart` |
-| Background diklik: `onMessageOpenedApp` | `lib/messaging/push_service.dart` |
-| Terminated: `getInitialMessage` | `lib/messaging/push_service.dart` |
-| Klik banner lokal saat terminated | `lib/messaging/push_service.dart` |
-| Parsing payload → route (fungsi murni) | `lib/messaging/notification_route.dart` |
-| Topik `pengumuman-kampus` | `lib/messaging/push_service.dart` |
-| Deep link `/pengumuman/:id` | `lib/routes.dart`, `lib/pages/announcement_page.dart` |
-| Halaman Debug (izin, ID terpotong, uji banner) | `lib/pages/debug_page.dart` |
-| Login + guard route + token secure storage | `lib/providers/auth_provider.dart`, `lib/data/` |
+| Kotak masuk notifikasi | `lib/data/inbox_store.dart`, `lib/presentation/pages/inbox_page.dart` |
+| Badge jumlah belum dibaca | `lib/presentation/pages/home_page.dart`, `lib/presentation/providers/inbox_provider.dart` |
+| Suara notifikasi kustom | `lib/data/push_service.dart`, `android/app/src/main/res/raw/notif.wav` |
+| Background handler top-level | `lib/data/push_service.dart` |
+| Foreground: banner lokal manual | `lib/data/push_service.dart` |
+| Background diklik: `onMessageOpenedApp` | `lib/data/push_service.dart` |
+| Terminated: `getInitialMessage` | `lib/data/push_service.dart` |
+| Klik banner lokal saat terminated | `lib/data/push_service.dart` |
+| Parsing payload → route (fungsi murni) | `lib/data/notification_route.dart` |
+| Topik `pengumuman-kampus` | `lib/data/push_service.dart` |
+| Deep link `/pengumuman/:id` | `lib/routes.dart`, `lib/presentation/pages/announcement_page.dart` |
+| Halaman Debug (izin, ID terpotong, uji banner) | `lib/presentation/pages/debug_page.dart` |
+| Login + guard route + token secure storage | `lib/presentation/providers/auth_provider.dart`, `lib/data/` |
 
 ## Stack
 
@@ -237,23 +237,43 @@ sesi habis.
 
 ## Struktur folder
 
+Susunan **layer-first**: kode dibagi menurut lapisan, bukan menurut fitur.
+Arah dependensi satu arah — `presentation` → `domain` ← `data`.
+
 ```
 lib/
-├── main.dart
-├── routes.dart
-├── data/          token_store, auth_repository, session_keeper, api_client, api_errors
-├── notifications/ inbox_item, inbox_store, message_mapper
-├── providers/     auth_provider, inbox_provider, app_providers (router + push)
-├── messaging/     push_service, notification_route
-└── pages/         login, home, inbox, announcement, debug
+├── main.dart          bootstrap: Firebase, ProviderContainer, runApp
+├── routes.dart        konstanta path (dipakai data + presentation)
+├── domain/            entitas murni, tanpa Flutter/HTTP/JSON
+│   ├── announcement.dart
+│   └── inbox_item.dart
+├── data/              sumber data: HTTP, penyimpanan, pemetaan payload
+│   ├── api_client.dart
+│   ├── api_errors.dart
+│   ├── announcement_repository.dart
+│   ├── auth_repository.dart
+│   ├── inbox_store.dart
+│   ├── message_mapper.dart
+│   ├── notification_route.dart
+│   ├── push_service.dart
+│   ├── session_keeper.dart
+│   └── token_store.dart
+└── presentation/      semua yang menyentuh layar
+    ├── pages/         login, home, inbox, announcement, debug
+    └── providers/     auth_provider, inbox_provider, app_providers
 android/app/src/main/
 ├── AndroidManifest.xml    channel + suara default untuk FCM
 └── res/raw/notif.wav      suara notifikasi kustom
 docs/              payload contoh, panduan belajar, catatan implementasi
-screenshots/       bukti uji tiga app state
+screenshots/       bukti uji tiga app state + struktur sebelum/sesudah refactor
 test/              unit + widget test
 tool/              demo.bat, buat_suara.py
 ```
+
+`routes.dart` sengaja tetap di root `lib/`, bukan di `presentation/`: lapisan
+`data/notification_route.dart` juga memakainya untuk menormalkan deep link.
+Kalau dipindah ke `presentation/`, lapisan data akan mengimpor presentation dan
+arah dependensinya terbalik.
 
 ## Dokumen pendukung
 
@@ -276,6 +296,9 @@ tool/              demo.bat, buat_suara.py
   ulang).
 - [`docs/refleksi.md`](docs/refleksi.md) - jawaban empat pertanyaan refleksi
   codelab, dirujuk ke kode dan temuan audit.
+- [`docs/laporan-refactor-layer-first.md`](docs/laporan-refactor-layer-first.md) -
+  catatan refactor struktur `lib/` menjadi layer-first: pemetaan berkas,
+  alasan keputusan, dan hasil verifikasi.
 
 ## Referensi
 

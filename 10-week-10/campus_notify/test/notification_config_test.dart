@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:campus_notify/messaging/push_service.dart';
+import 'package:campus_notify/data/push_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Konfigurasi notifikasi tersebar di dua tempat: kode Dart dan

@@ -2,14 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/announcement_repository.dart';
-import '../messaging/push_service.dart';
+import '../../data/announcement_repository.dart';
+import '../../data/push_service.dart';
+import '../../routes.dart';
 import '../pages/announcement_page.dart';
 import '../pages/debug_page.dart';
 import '../pages/home_page.dart';
 import '../pages/inbox_page.dart';
 import '../pages/login_page.dart';
-import '../routes.dart';
 import 'auth_provider.dart';
 import 'inbox_provider.dart';
 
